@@ -1,6 +1,7 @@
 package parking_lot.models;
 
 public class Gate extends BaseModel{
+
     private GateType gateType;
     private String name;
     private Operator operator;
