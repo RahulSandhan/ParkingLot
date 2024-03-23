@@ -1,19 +1,18 @@
+import Models.*;
+import controllers.GenerateInvoiceRequestDto;
+import controllers.GenerateInvoiceResponseDto;
+import controllers.InvoiceController;
 import controllers.TicketController;
-import parking_lot.models.Gate;
-import parking_lot.models.GateType;
-import parking_lot.models.Operator;
-import repositories.GateRepository;
-import repositories.ParkingLotRepository;
-import repositories.TicketRepository;
-import repositories.VehicleRepository;
-import services.GateService;
-import services.TicketService;
-import services.TicketServiceImpl;
+import dtos.GenerateTicketRequestDto;
+import dtos.GenerateTicketResponseDto;
+import factories.CalculateFeesStrategyFactory;
+import Models.*;
+import repositories.*;
+import services.*;
 import strategies.spot_assignment.AssignSpotStrategy;
 import strategies.spot_assignment.NearestFirstSpotAssignmentStrategy;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class ParkingLotRunner {
     public static void main(String[] args) {
@@ -24,12 +23,65 @@ public class ParkingLotRunner {
         gate1.setOperator(new Operator());
         gate1.setId(1);
 
-        Map<Integer, Gate> gateMap = new HashMap<>(){{
-            put(1,gate1);
+        Gate gate2 = new Gate();
+        gate2.setId(2);
+        gate2.setOperator(new Operator());
+        gate2.setName("4Z");
+        gate2.setGateType(GateType.EXIT);
+
+        Map<Integer, Gate> gateMap = new HashMap<Integer, Gate>(){{
+            put(1, gate1);
+            put(2, gate2);
         }};
 
+        List<Spot> spots = Arrays.asList(new Spot("1A", SpotStatus.UNOCCUPIED, VehicleType.CAR)
+                // new Spot("1B", SpotStatus.UNOCCUPIED, VehicleType.CAR)
+                );
+        List<Section> sections = new ArrayList<>();
+        Section section = new Section();
+        section.setName("AA");
+        section.setId(1);
+        section.setSpots(spots);
+        sections.add(section);
+
+        List<Floor> floors = new ArrayList<>();
+        Floor floor = new Floor();
+        floor.setFloorNum(1);
+        floor.setFloorStatus(FloorStatus.OPERATIONAL);
+        floor.setSections(sections);
+        floor.setId(1);
+        floors.add(floor);
+
+        List<Gate> gates = Arrays.asList(gate1, gate2);
+
+        ParkingLot parkingLot = new ParkingLot();
+        parkingLot.setFloors(floors);
+        parkingLot.setGates(gates);
+        parkingLot.setId(1);
+
+        Map<Integer, ParkingLot> parkingLotMap = new HashMap<Integer, ParkingLot>(){{
+            put(1, parkingLot);
+        }};
+
+        Slab slab1 = new Slab(1, VehicleType.CAR, 0, 2, 10);
+        Slab slab2 = new Slab(2, VehicleType.CAR, 2, 4, 20);
+        Slab slab3 = new Slab(3, VehicleType.CAR, 4, 8, 25);
+        Slab slab4 = new Slab(4, VehicleType.CAR, 8, -1, 40);
+
+        Map<Integer, Slab> slabMap = new HashMap<Integer, Slab>(){{
+            put(1, slab1);
+            put(2, slab2);
+            put(3, slab3);
+            put(4, slab4);
+        }};
+
+        SlabRepository slabRepository = new SlabRepository(slabMap);
+        InvoiceRepository invoiceRepository = new InvoiceRepository();
+
+        CalculateFeesStrategyFactory calculateFeesStrategyFactory = new CalculateFeesStrategyFactory(slabRepository);
+
         GateRepository gateRepository = new GateRepository(gateMap);
-        ParkingLotRepository parkingLotRepository = new ParkingLotRepository();
+        ParkingLotRepository parkingLotRepository = new ParkingLotRepository(parkingLotMap);
         TicketRepository ticketRepository = new TicketRepository();
         VehicleRepository vehicleRepository = new VehicleRepository();
 
@@ -37,8 +89,35 @@ public class ParkingLotRunner {
         AssignSpotStrategy assignSpotStrategy = new NearestFirstSpotAssignmentStrategy();
         TicketService ticketService = new TicketServiceImpl(gateService, vehicleRepository, assignSpotStrategy, parkingLotRepository, ticketRepository);
 
+        InvoiceService invoiceService = new InvoiceServiceImpl(ticketService, gateService, calculateFeesStrategyFactory, invoiceRepository);
         TicketController ticketController = new TicketController(ticketService);
+        InvoiceController invoiceController = new InvoiceController(invoiceService);
 
         //create objects of generateTicketRequestDto and call generateTicket method
+        GenerateTicketRequestDto requestDto = new GenerateTicketRequestDto();
+        requestDto.setGateId(1);
+        requestDto.setVehicleType(VehicleType.CAR.toString());
+        requestDto.setVehicleNumber("KA 05 1234");
+
+        GenerateTicketResponseDto responseDto = ticketController.generateTicket(requestDto);
+        System.out.println(responseDto);
+        int ticketId = responseDto.getTicket().getId();
+
+        requestDto.setVehicleNumber("KA 05 6789");
+        responseDto = ticketController.generateTicket(requestDto);
+        System.out.println(responseDto);
+
+        try {
+            Thread.sleep(5000);
+        } catch (Exception e){
+            System.out.println("Exception while sleeping");
+        }
+
+        GenerateInvoiceRequestDto generateInvoiceRequestDto = new GenerateInvoiceRequestDto();
+        generateInvoiceRequestDto.setTicketId(ticketId);
+        generateInvoiceRequestDto.setGateId(gate2.getId());
+
+        GenerateInvoiceResponseDto generateInvoiceResponseDto = invoiceController.generateInvoice(generateInvoiceRequestDto);
+        System.out.println(generateInvoiceResponseDto);
     }
 }

@@ -5,7 +5,7 @@ import dtos.GenerateTicketResponseDto;
 import dtos.Response;
 import dtos.ResponseStatus;
 import exceptions.InvalidRequestException;
-import parking_lot.models.Ticket;
+import Models.Ticket;
 import services.TicketService;
 
 public class TicketController {

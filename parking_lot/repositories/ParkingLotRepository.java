@@ -1,8 +1,7 @@
 package repositories;
 
-import com.sun.source.tree.PackageTree;
-import parking_lot.models.Gate;
-import parking_lot.models.ParkingLot;
+import Models.Gate;
+import Models.ParkingLot;
 
 import java.util.HashMap;
 import java.util.Map;
