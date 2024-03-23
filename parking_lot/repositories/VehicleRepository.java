@@ -1,7 +1,7 @@
 package repositories;
 
-import parking_lot.models.Vehicle;
-import parking_lot.models.VehicleType;
+import Models.Vehicle;
+import Models.VehicleType;
 
 import java.util.HashMap;
 import java.util.Map;

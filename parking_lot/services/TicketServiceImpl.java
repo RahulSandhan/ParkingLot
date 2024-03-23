@@ -1,7 +1,6 @@
 package services;
 
-import parking_lot.models.*;
-import repositories.GateRepository;
+import Models.*;
 import repositories.ParkingLotRepository;
 import repositories.TicketRepository;
 import repositories.VehicleRepository;
@@ -47,5 +46,10 @@ public class TicketServiceImpl implements TicketService{
         ticket.setVehicle(vehicle);
         ticket.setEntryTime(new Date());
         return ticketRepository.insertTicket(ticket);
+    }
+
+    @Override
+    public Ticket getTicketById(int ticketId) {
+        return ticketRepository.getTicketById(ticketId);
     }
 }

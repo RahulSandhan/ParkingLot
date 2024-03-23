@@ -1,7 +1,7 @@
 package strategies.spot_assignment;
 
+import Models.*;
 import exceptions.NoSpotAvailableException;
-import parking_lot.models.*;
 
 public class NearestFirstSpotAssignmentStrategy implements AssignSpotStrategy{
 

@@ -1,6 +1,6 @@
 package services;
 
-import parking_lot.models.Gate;
+import Models.Gate;
 import repositories.GateRepository;
 
 public class GateService {

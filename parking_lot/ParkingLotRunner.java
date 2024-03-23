@@ -1,14 +1,14 @@
+import Models.*;
+import controllers.GenerateInvoiceRequestDto;
+import controllers.GenerateInvoiceResponseDto;
+import controllers.InvoiceController;
 import controllers.TicketController;
 import dtos.GenerateTicketRequestDto;
 import dtos.GenerateTicketResponseDto;
-import parking_lot.models.*;
-import repositories.GateRepository;
-import repositories.ParkingLotRepository;
-import repositories.TicketRepository;
-import repositories.VehicleRepository;
-import services.GateService;
-import services.TicketService;
-import services.TicketServiceImpl;
+import factories.CalculateFeesStrategyFactory;
+import Models.*;
+import repositories.*;
+import services.*;
 import strategies.spot_assignment.AssignSpotStrategy;
 import strategies.spot_assignment.NearestFirstSpotAssignmentStrategy;
 
@@ -63,6 +63,23 @@ public class ParkingLotRunner {
             put(1, parkingLot);
         }};
 
+        Slab slab1 = new Slab(1, VehicleType.CAR, 0, 2, 10);
+        Slab slab2 = new Slab(2, VehicleType.CAR, 2, 4, 20);
+        Slab slab3 = new Slab(3, VehicleType.CAR, 4, 8, 25);
+        Slab slab4 = new Slab(4, VehicleType.CAR, 8, -1, 40);
+
+        Map<Integer, Slab> slabMap = new HashMap<Integer, Slab>(){{
+            put(1, slab1);
+            put(2, slab2);
+            put(3, slab3);
+            put(4, slab4);
+        }};
+
+        SlabRepository slabRepository = new SlabRepository(slabMap);
+        InvoiceRepository invoiceRepository = new InvoiceRepository();
+
+        CalculateFeesStrategyFactory calculateFeesStrategyFactory = new CalculateFeesStrategyFactory(slabRepository);
+
         GateRepository gateRepository = new GateRepository(gateMap);
         ParkingLotRepository parkingLotRepository = new ParkingLotRepository(parkingLotMap);
         TicketRepository ticketRepository = new TicketRepository();
@@ -72,7 +89,9 @@ public class ParkingLotRunner {
         AssignSpotStrategy assignSpotStrategy = new NearestFirstSpotAssignmentStrategy();
         TicketService ticketService = new TicketServiceImpl(gateService, vehicleRepository, assignSpotStrategy, parkingLotRepository, ticketRepository);
 
+        InvoiceService invoiceService = new InvoiceServiceImpl(ticketService, gateService, calculateFeesStrategyFactory, invoiceRepository);
         TicketController ticketController = new TicketController(ticketService);
+        InvoiceController invoiceController = new InvoiceController(invoiceService);
 
         //create objects of generateTicketRequestDto and call generateTicket method
         GenerateTicketRequestDto requestDto = new GenerateTicketRequestDto();
@@ -82,10 +101,23 @@ public class ParkingLotRunner {
 
         GenerateTicketResponseDto responseDto = ticketController.generateTicket(requestDto);
         System.out.println(responseDto);
+        int ticketId = responseDto.getTicket().getId();
 
         requestDto.setVehicleNumber("KA 05 6789");
         responseDto = ticketController.generateTicket(requestDto);
         System.out.println(responseDto);
 
+        try {
+            Thread.sleep(5000);
+        } catch (Exception e){
+            System.out.println("Exception while sleeping");
+        }
+
+        GenerateInvoiceRequestDto generateInvoiceRequestDto = new GenerateInvoiceRequestDto();
+        generateInvoiceRequestDto.setTicketId(ticketId);
+        generateInvoiceRequestDto.setGateId(gate2.getId());
+
+        GenerateInvoiceResponseDto generateInvoiceResponseDto = invoiceController.generateInvoice(generateInvoiceRequestDto);
+        System.out.println(generateInvoiceResponseDto);
     }
 }

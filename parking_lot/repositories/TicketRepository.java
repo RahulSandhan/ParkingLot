@@ -1,6 +1,6 @@
 package repositories;
 
-import parking_lot.models.Ticket;
+import Models.Ticket;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,5 +21,9 @@ public class TicketRepository {
        ticket.setId(id);
        map.put(id++, ticket);
        return ticket;
+    }
+
+    public Ticket getTicketById(int ticketId){
+        return map.get(ticketId);
     }
 }

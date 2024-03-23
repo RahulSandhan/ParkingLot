@@ -1,6 +1,6 @@
 package repositories;
 
-import parking_lot.models.Gate;
+import Models.Gate;
 
 import java.util.HashMap;
 import java.util.Map;

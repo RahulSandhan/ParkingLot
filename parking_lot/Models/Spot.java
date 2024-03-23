@@ -1,4 +1,4 @@
-package parking_lot.models;
+package Models;
 
 public class Spot extends BaseModel{
 

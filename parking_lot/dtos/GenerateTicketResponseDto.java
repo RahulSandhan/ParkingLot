@@ -1,6 +1,6 @@
 package dtos;
 
-import parking_lot.models.Ticket;
+import Models.Ticket;
 
 public class GenerateTicketResponseDto {
     private Ticket ticket;
